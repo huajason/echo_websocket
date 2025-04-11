@@ -38,7 +38,7 @@ server/
 
 2. Install dependencies:
    ```bash
-   pip install fastapi uvicorn
+   pip install fastapi uvicorn[standard]
    ```
 
 3. Run the FastAPI server:
