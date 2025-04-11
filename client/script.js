@@ -16,20 +16,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const statusLabel = document.getElementById('statusLabel');
             const statusCircle = statusLabel.querySelector('.status-circle');
 
-            if (isOnline) {
-                statusCircle.classList.add('online');
-                statusCircle.classList.remove('offline');
-            } else {
-                statusCircle.classList.add('offline');
-                statusCircle.classList.remove('online');
-            }
-
+            removeClassName = isOnline ? 'offline' : 'online';
+            addClassName = isOnline ? 'online' : 'offline';
+            console.log(`Status: ${isOnline ? 'Online' : 'Offline'}`);
+            statusCircle.classList.remove(removeClassName);
+            statusCircle.classList.add(addClassName);
         }
 
         websocket.onopen = () => {
             console.log("Connected to WebSocket server.");
             updateStatusLabel(true);
             scrollToBottom();
+            hideNotification();
         };
 
         websocket.onmessage = (event) => {
@@ -92,17 +90,20 @@ document.addEventListener('DOMContentLoaded', () => {
         notification.textContent = message;
         notification.classList.remove('hidden');
         notification.classList.add('visible');
+    }
 
-        // Hide the notification after 3 seconds
-        notificationTimeout = setTimeout(() => {
-            notification.classList.remove('visible');
-            notification.classList.add('hidden');
-        }, 3000);
+    function hideNotification() {
+        const notification = document.getElementById('notification');
+        notification.classList.remove('visible');
+        notification.classList.add('hidden');
     }
 
     // Handle sending messages
     function sendMessage() {
         if (websocket.readyState !== WebSocket.OPEN) {
+            // Add shake effect to the send button
+            sendButton.classList.add('shake');
+            setTimeout(() => sendButton.classList.remove('shake'), 500); // Remove the shake effect after 500ms
             return;
         }
 
