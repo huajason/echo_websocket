@@ -56,4 +56,3 @@ async def websocket_endpoint(websocket: WebSocket, token: str = Query(...)):
 def get_token():
     # Dummy endpoint to provide a token for testing
     return {"access_token": "valid_token", "token_type": "bearer"}
-

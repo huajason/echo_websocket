@@ -5,24 +5,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const messageInput = document.getElementById('messageInput');
     const sendButton = document.getElementById('sendButton');
+    const messagesContentDiv = document.getElementById('messagesContent');
     const messagesDiv = document.getElementById('messages');
+    let notificationTimeout;
 
     function connectWebSocket() {
         websocket = new WebSocket(wsUrl);
 
+        function updateStatusLabel(isOnline) {
+            const statusLabel = document.getElementById('statusLabel');
+            const statusCircle = statusLabel.querySelector('.status-circle');
+
+            if (isOnline) {
+                statusCircle.classList.add('online');
+                statusCircle.classList.remove('offline');
+            } else {
+                statusCircle.classList.add('offline');
+                statusCircle.classList.remove('online');
+            }
+
+        }
+
         websocket.onopen = () => {
             console.log("Connected to WebSocket server.");
+            updateStatusLabel(true);
+            scrollToBottom();
         };
 
         websocket.onmessage = (event) => {
             const message = createChatBubble(event.data, 'left');
-            messagesDiv.appendChild(message);
+            messagesContentDiv.appendChild(message);
             scrollToBottom();
         };
 
         websocket.onclose = () => {
             console.log("WebSocket connection closed. Attempting to reconnect...");
-            displayWarningMessage('Server disconnected. Unable to send messages.');
+            updateStatusLabel(false);
+            showNotification('Server disconnected. Unable to send messages.');
             setTimeout(connectWebSocket, 3000); // Retry connection every 3 seconds
         };
 
@@ -57,21 +76,40 @@ document.addEventListener('DOMContentLoaded', () => {
         const warningMessage = document.createElement('div');
         warningMessage.textContent = text;
         warningMessage.className = 'warning-message';
-        messagesDiv.appendChild(warningMessage);
+        messagesContentDiv.appendChild(warningMessage);
         scrollToBottom();
+    }
+
+    // Utility function to show notifications
+    function showNotification(message) {
+        const notification = document.getElementById('notification');
+
+        // If a notification is already visible, do nothing
+        if (notification.classList.contains('visible')) {
+            return;
+        }
+
+        notification.textContent = message;
+        notification.classList.remove('hidden');
+        notification.classList.add('visible');
+
+        // Hide the notification after 3 seconds
+        notificationTimeout = setTimeout(() => {
+            notification.classList.remove('visible');
+            notification.classList.add('hidden');
+        }, 3000);
     }
 
     // Handle sending messages
     function sendMessage() {
         if (websocket.readyState !== WebSocket.OPEN) {
-            displayWarningMessage('Cannot send message. Server is disconnected.');
             return;
         }
 
         const message = messageInput.value;
         if (message.trim() === '') return;
         const sentMessage = createChatBubble(message, 'right');
-        messagesDiv.appendChild(sentMessage);
+        messagesContentDiv.appendChild(sentMessage);
         websocket.send(message);
         messageInput.value = '';
         scrollToBottom();

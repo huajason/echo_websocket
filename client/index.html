@@ -6,12 +6,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WebSocket Client</title>
     <link rel="stylesheet" href="styles.css">
-    <script src="script.js"></script>
+    <script src="script.js" defer></script>
 </head>
 
 <body>
-    <h1>WebSocket Client</h1>
-    <div id="messages"></div>
+    <div id="notification" class="notification hidden"></div>
+
+    <div class="title-container">
+        <h1>WebSocket Client</h1>
+        <div id="statusLabel" class="status-label">
+            <span class="status-circle offline"></span>
+        </div>
+    </div>
+
+    <div id="messages">
+        <div id="messagesContent">
+            <!-- Messages will be appended here -->
+        </div>
+    </div>
     <div id="inputArea">
         <input id="messageInput" type="text" placeholder="Enter your message">
         <button id="sendButton">Send</button>
