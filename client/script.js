@@ -9,6 +9,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const messagesDiv = document.getElementById('messages');
     let notificationTimeout;
 
+    // // Add a toggle button for switching message display modes
+    // const toggleButton = document.createElement('button');
+    // toggleButton.textContent = '切换显示模式';
+    // toggleButton.id = 'toggleDisplayMode';
+    // document.body.insertBefore(toggleButton, messagesDiv);
+
+    let isStreamingMode = true; // Default to streaming mode
+
+    // toggleButton.addEventListener('click', () => {
+    //     isStreamingMode = !isStreamingMode;
+    //     toggleButton.textContent = isStreamingMode ? '切换到普通模式' : '切换到流式模式';
+    // });
+
     function connectWebSocket() {
         websocket = new WebSocket(wsUrl);
 
@@ -31,9 +44,26 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         websocket.onmessage = (event) => {
-            const message = createChatBubble(event.data, 'left');
-            messagesContentDiv.appendChild(message);
-            scrollToBottom();
+            const message = event.data;
+            if (isStreamingMode) {
+                const messageBubble = createChatBubble('', 'left');
+                messagesContentDiv.appendChild(messageBubble);
+
+                let index = 0;
+                const interval = setInterval(() => {
+                    if (index < message.length) {
+                        messageBubble.textContent += message[index];
+                        index++;
+                        scrollToBottom();
+                    } else {
+                        clearInterval(interval);
+                    }
+                }, 50); // Adjust the interval speed as needed
+            } else {
+                const messageBubble = createChatBubble(message, 'left');
+                messagesContentDiv.appendChild(messageBubble);
+                scrollToBottom();
+            }
         };
 
         websocket.onclose = () => {
