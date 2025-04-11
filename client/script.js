@@ -1,14 +1,37 @@
 document.addEventListener('DOMContentLoaded', () => {
     const token = "valid_token"; // Replace with actual token retrieval logic
-    const ws = new WebSocket(`ws://127.0.0.1:8000/ws?token=${token}`);
+    const wsUrl = `ws://127.0.0.1:8000/ws?token=${token}`;
+    let websocket;
 
     const messageInput = document.getElementById('messageInput');
     const sendButton = document.getElementById('sendButton');
     const messagesDiv = document.getElementById('messages');
 
-    ws.onopen = () => {
-        console.log('WebSocket connection established');
-    };
+    function connectWebSocket() {
+        websocket = new WebSocket(wsUrl);
+
+        websocket.onopen = () => {
+            console.log("Connected to WebSocket server.");
+        };
+
+        websocket.onmessage = (event) => {
+            const message = createChatBubble(event.data, 'left');
+            messagesDiv.appendChild(message);
+            scrollToBottom();
+        };
+
+        websocket.onclose = () => {
+            console.log("WebSocket connection closed. Attempting to reconnect...");
+            displayWarningMessage('Server disconnected. Unable to send messages.');
+            setTimeout(connectWebSocket, 3000); // Retry connection every 3 seconds
+        };
+
+        websocket.onerror = (error) => {
+            console.error("WebSocket error:", error);
+        };
+    }
+
+    connectWebSocket();
 
     // Scroll to the bottom when a new message is added
     function scrollToBottom() {
@@ -25,6 +48,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Utility function to display warning messages
     function displayWarningMessage(text) {
+        const existingWarning = document.querySelector('.warning-message');
+        if (existingWarning) {
+            existingWarning.textContent = text; // Update the existing warning message
+            return;
+        }
+
         const warningMessage = document.createElement('div');
         warningMessage.textContent = text;
         warningMessage.className = 'warning-message';
@@ -32,21 +61,9 @@ document.addEventListener('DOMContentLoaded', () => {
         scrollToBottom();
     }
 
-    // Handle incoming messages
-    ws.onmessage = (event) => {
-        const message = createChatBubble(event.data, 'left');
-        messagesDiv.appendChild(message);
-        scrollToBottom();
-    };
-
-    ws.onclose = () => {
-        console.log('WebSocket connection closed');
-        displayWarningMessage('Server disconnected. Unable to send messages.');
-    };
-
     // Handle sending messages
     function sendMessage() {
-        if (ws.readyState !== WebSocket.OPEN) {
+        if (websocket.readyState !== WebSocket.OPEN) {
             displayWarningMessage('Cannot send message. Server is disconnected.');
             return;
         }
@@ -55,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (message.trim() === '') return;
         const sentMessage = createChatBubble(message, 'right');
         messagesDiv.appendChild(sentMessage);
-        ws.send(message);
+        websocket.send(message);
         messageInput.value = '';
         scrollToBottom();
     }
