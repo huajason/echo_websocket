@@ -23,6 +23,15 @@ document.addEventListener('DOMContentLoaded', () => {
         return bubble;
     }
 
+    // Utility function to display warning messages
+    function displayWarningMessage(text) {
+        const warningMessage = document.createElement('div');
+        warningMessage.textContent = text;
+        warningMessage.className = 'warning-message';
+        messagesDiv.appendChild(warningMessage);
+        scrollToBottom();
+    }
+
     // Handle incoming messages
     ws.onmessage = (event) => {
         const message = createChatBubble(event.data, 'left');
@@ -32,10 +41,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     ws.onclose = () => {
         console.log('WebSocket connection closed');
+        displayWarningMessage('Server disconnected. Unable to send messages.');
     };
 
     // Handle sending messages
     function sendMessage() {
+        if (ws.readyState !== WebSocket.OPEN) {
+            displayWarningMessage('Cannot send message. Server is disconnected.');
+            return;
+        }
+
         const message = messageInput.value;
         if (message.trim() === '') return;
         const sentMessage = createChatBubble(message, 'right');
